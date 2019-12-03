@@ -32,15 +32,18 @@ fn get_feedback(guess: u32, code: u32) -> [u8; 2] {
     let guess = get_digits(guess);
     let code = get_digits(code); // OPT: Cache this
 
+    let mut code_store = code.clone();
+
     let mut correct_place = 0;
     let mut incorrect_place = 0;
-
 
     for (gd, cd) in guess.iter().zip(&code) {
         if gd == cd {
             correct_place += 1;
-        } else if code.contains(gd) {
+            code_store.retain(|x| x != gd);
+        } else if code_store.contains(gd) {
             incorrect_place += 1;
+            code_store.retain(|x| x != gd);
         }
     }
 
