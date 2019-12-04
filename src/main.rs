@@ -1,34 +1,52 @@
+pub mod solver;
+
+use crate::solver::MastermindSolver;
 use rand::prelude::*;
 use std::io::{stdin, stdout, Write};
 use std::error::Error;
 
+const NUM_DIGITS: u32 = 6;
+const USER: bool = false;
+
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::thread_rng();
-    let code = rng.gen_range(0, 1_000_000);
+    let code = rng.gen_range(0, 10u32.pow(NUM_DIGITS));
 
     dbg!("Code: {:?}", code);
 
-    loop {
-        print!("Guess a 6 digit number: ");
-        let _ = stdout().flush();
-        let mut s = String::new();
-        stdin().read_line(&mut s)?;
+    let mut solver = MastermindSolver::new();
 
-        let guess: u32 = s.trim().parse()?;
+    loop {
+        let guess = if USER {
+            print!("Guess a 6 digit number: ");
+            let _ = stdout().flush();
+            let mut s = String::new();
+            stdin().read_line(&mut s)?;
+
+            s.trim().parse()?
+        } else {
+            solver.make_guess()
+        };
+
+        println!("Made Guess: {:?}", guess);
 
         let [correct_place, incorrect_place] = get_feedback(guess, code);
 
         println!("{:?} {:?}", correct_place, incorrect_place);
+
+        if !USER {
+            solver.use_feedback(guess, correct_place, incorrect_place);
+        }
+
 
         if guess == code {
             println!("I guessed it!");
             break Ok(());
         }
     }
-
 }
 
-fn get_feedback(guess: u32, code: u32) -> [u8; 2] {
+pub fn get_feedback(guess: u32, code: u32) -> [u8; 2] {
     let guess = get_digits(guess);
     let code = get_digits(code); // OPT: Cache this
 
