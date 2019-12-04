@@ -71,15 +71,15 @@ pub fn get_feedback(guess: u32, code: u32) -> [u8; 2] {
 
 
 fn get_digits(n: u32) -> Vec<u32> {
-    fn next_digit(n: u32, digits: &mut Vec<u32>) {
+    fn next_digit(n: u32, digits: &mut Vec<u32>, position: usize) {
         if n >= 10 {
-            next_digit(n / 10, digits);
+            next_digit(n / 10, digits, position - 1);
         }
-        digits.push(n % 10);
+        digits[position] = n % 10;
     }
 
-    let mut digits = Vec::new();
-    next_digit(n, &mut digits);
+    let mut digits = vec![0; 6];
+    next_digit(n, &mut digits, 5);
     digits
 }
 
