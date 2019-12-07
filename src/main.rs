@@ -4,17 +4,16 @@ use crate::solver::MastermindSolver;
 use rand::prelude::*;
 use std::io::{stdin, stdout, Write};
 use std::error::Error;
+use std::convert::TryInto;
 
-const NUM_DIGITS: u32 = 6;
+const NUM_DIGITS: usize = 6;
 const USER: bool = false;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut rng = rand::thread_rng();
-    let code = rng.gen_range(0, 10u32.pow(NUM_DIGITS));
+    let code = rng.gen_range(0, 10u32.pow(NUM_DIGITS.try_into()?));
 
-    dbg!("Code: {:?}", code);
-
-    let mut solver = MastermindSolver::new();
+    let mut solver = MastermindSolver::new()?;
 
     loop {
         let guess = if USER {
@@ -50,20 +49,32 @@ pub fn get_feedback(guess: u32, code: u32) -> [u8; 2] {
     let guess = get_digits(guess);
     let code = get_digits(code); // OPT: Cache this
 
-    let mut code_store = code.clone();
+    let mut guess_unchecked = [true; NUM_DIGITS];
+    let mut code_unchecked = [true; NUM_DIGITS];
+
+    //let mut code_store = code.clone();
 
     let mut correct_place = 0;
     let mut incorrect_place = 0;
 
-    for (gd, cd) in guess.iter().zip(&code) {
+    for (i, (gd, cd)) in guess.iter().zip(&code).enumerate() {
         if gd == cd {
             correct_place += 1;
-            code_store.retain(|x| x != gd);
-        } else if code_store.contains(gd) {
-            incorrect_place += 1;
-            code_store.retain(|x| x != gd);
+            guess_unchecked[i] = false;
+            code_unchecked[i] = false;
         }
     }
+
+    for (i, gd) in guess.iter().enumerate() {
+        for (j, cd) in code.iter().enumerate() {
+            if gd == cd && code_unchecked[j] && guess_unchecked[i] && i != j {
+                incorrect_place += 1;
+                guess_unchecked[i] = false;
+                code_unchecked[j] = false;
+            }
+        }
+    }
+
 
     [correct_place, incorrect_place]
 }
@@ -96,3 +107,4 @@ mod tests {
         assert_eq!(incorrect_place, 1);
     }
 }
+

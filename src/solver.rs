@@ -1,15 +1,16 @@
 use crate::{NUM_DIGITS, get_feedback};
 use std::convert::TryInto;
+use std::error::Error;
 
 pub struct MastermindSolver {
     possibilites: Vec<bool>
 }
 
 impl MastermindSolver {
-    pub fn new() -> Self {
-        MastermindSolver {
-            possibilites: vec![true; 10usize.pow(NUM_DIGITS)],
-        }
+    pub fn new() -> Result<Self, Box<dyn Error>> {
+        Ok(MastermindSolver {
+            possibilites: vec![true; 10usize.pow(NUM_DIGITS.try_into()?)],
+        })
     }
 
     pub fn make_guess(&self) -> u32 {
